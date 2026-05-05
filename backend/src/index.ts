@@ -47,12 +47,12 @@ const seeds = [
 
 async function ensureSeeded() {
   const count = await prisma.salary.count();
-  if (count >= 30) return;
+  if (count >= 28) return;
   console.log(`DB has ${count} records — seeding...`);
   await prisma.salary.deleteMany();
-  for (const s of seeds) {
-    await prisma.salary.create({ data: { ...s, total_compensation: s.base_salary + s.bonus + s.stock } });
-  }
+  await prisma.salary.createMany({
+    data: seeds.map(s => ({ ...s, total_compensation: s.base_salary + s.bonus + s.stock })),
+  });
   console.log(`Seeded ${seeds.length} records.`);
 }
 

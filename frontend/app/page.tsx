@@ -78,8 +78,11 @@ export default function Home() {
   const [salaries, setSalaries] = useState<Salary[]>([]);
   const [filters, setFilters] = useState({ company: "", role: "", level: "", location: "" });
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   useEffect(() => {
+    setPage(1);
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
     setLoading(true);
@@ -105,6 +108,8 @@ export default function Home() {
   const levels = [...new Set(salaries.map(s => s.level))].sort();
   const [activeLevel, setActiveLevel] = useState("");
   const filteredSalaries = activeLevel ? salaries.filter(s => s.level === activeLevel) : salaries;
+  const totalPages = Math.ceil(filteredSalaries.length / PAGE_SIZE);
+  const paginated = filteredSalaries.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const cCount = useCountUp(companies.length);
   const sCount = useCountUp(salaries.length);
@@ -266,12 +271,12 @@ export default function Home() {
             {/* Level quick filter */}
             {levels.length > 0 && (
               <div className="px-5 py-2.5 border-b border-zinc-100 flex gap-1.5 flex-wrap">
-                <button onClick={() => setActiveLevel("")}
+                <button onClick={() => { setActiveLevel(""); setPage(1); }}
                   className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-colors ${activeLevel === "" ? "bg-[#0f0f0f] text-[#c8f135]" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}>
                   All
                 </button>
                 {levels.map(l => (
-                  <button key={l} onClick={() => setActiveLevel(activeLevel === l ? "" : l)}
+                  <button key={l} onClick={() => { setActiveLevel(activeLevel === l ? "" : l); setPage(1); }}
                     className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-colors ${activeLevel === l ? "bg-[#0f0f0f] text-[#c8f135]" : `${LEVEL_STYLE[l] ?? "bg-zinc-100 text-zinc-600"} hover:opacity-80`}`}>
                     {l}
                   </button>
@@ -298,7 +303,7 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSalaries.map((s, i) => (
+                    {paginated.map((s, i) => (
                       <tr key={s.id} className={`border-b border-zinc-50 hover:bg-[#f5f4f0] transition-colors ${i % 2 === 0 ? "" : "bg-zinc-50/40"}`}>
                         <td className="px-4 py-3">
                           <a href={`/company/${s.company}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -327,6 +332,29 @@ export default function Home() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-100">
+                    <span className="text-xs text-zinc-400">Page {page} of {totalPages}</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 font-semibold disabled:opacity-30 hover:bg-zinc-50 transition-colors"
+                      >
+                        ← Prev
+                      </button>
+                      <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 font-semibold disabled:opacity-30 hover:bg-zinc-50 transition-colors"
+                      >
+                        Next →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
