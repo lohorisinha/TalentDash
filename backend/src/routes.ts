@@ -5,6 +5,11 @@ import { salarySchema } from "./validators";
 const router = Router();
 const prisma = new PrismaClient();
 
+router.get("/count", async (req: Request, res: Response) => {
+  const count = await prisma.salary.count();
+  return res.json({ count });
+});
+
 router.post("/ingest-salary", async (req: Request, res: Response) => {
   const parsed = salarySchema.safeParse(req.body);
   if (!parsed.success) {
